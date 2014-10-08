@@ -1,0 +1,83 @@
+extends layout
+block script
+  script(type='text/javascript').
+    $(document).ready(function() {
+    
+      Number.prototype.between = function (min, max) {
+        return this > min && this < max;
+      };
+      
+      function findTempo(tempo) {
+        if (tempo < 60) {
+          return "Largo" }
+        else if ((tempo).between(59,66)) {
+          return "Larghetto" }
+        else if ((tempo).between(65,76)) {
+          return "Adagio" }
+        else if ((tempo).between(75,108)) {
+          return "Andante" }
+        else if ((tempo).between(107,120)) {
+          return "Moderato" }
+        else if ((tempo).between(119,168)) {
+          return "Allegro" }
+        else if ((tempo).between(167,200)) {
+          return "Presto" }
+        else if (tempo > 199) {
+          return "Prestissimo" };
+      };
+
+      var beatCount = 0;
+      var startTime;
+
+      function click(e) {
+        if(beatCount == 0) {
+          startTime = Date.now();
+        }
+        beatCount++;
+        if(beatCount >= 2) {
+          bpm = 60000 * beatCount / (Date.now() - startTime);
+          $('#bpm').text(bpm);
+          bpmInt = Math.round(bpm);
+          $('#bpmInt').text(bpmInt);
+          $('#tempoMarking').text(findTempo(bpmInt));
+          
+        }
+        return true;
+      };
+
+      document.onclick = click;
+      document.onkeydown = click;
+      //$('html').click(click);
+
+      $('#reset').click(function(){
+        beatCount = 0;
+          $('#bpm').text('');
+          $('#bpmInt').text('');
+      });
+    });
+  style(type='text/css').
+    #bpm{
+      margin-left: 13px;
+    }
+    .spacing{
+      margin-top: 15px;
+    }
+    #reset{
+      margin-top: 10px;
+    }
+    span{
+      margin-left: 3px;
+    }
+block content
+  h1 Beats Per Minute
+  p.spacing
+    | Click anywhere or press any key to start. The tempo will display after two clicks.
+  p
+    | The tempo will become more accurate as the number of beats increases.
+  p.spacing.label-text Exact Tempo: 
+    span#bpm
+  p.label-text Nearest Whole: 
+    span#bpmInt
+  p.label-text Tempo Marking:
+    span#tempoMarking
+  button#reset.btn.btn-lg.btn-primary(type='button') Reset
