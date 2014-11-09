@@ -1,7 +1,122 @@
 extends layout
 
 block script
+  style(type='text/css').
+    .palette{
+      width: 140px;
+      height: 140px;
+      border: 3px solid black;
+      display: inline-block;
+    }
+    .selected{
+      width: 140px;
+      height: 140px;
+      border: 5px solid red;
+      display: inline-block;
+    }
+  script(type='text/javascript').
+    $(document).ready(function(){
+    
+    // Dump uploaded image into canvas
+    function handleImage(e){
+        var reader = new FileReader();
+        reader.onload = function(event){
+            var img = new Image();
+            img.onload = function(){
+                canvas.width = img.width;
+                canvas.height = img.height;
+                ctx.drawImage(img,0,0);
+            }
+            img.src = event.target.result;
+        }
+        reader.readAsDataURL(e.target.files[0]);  
+        uploaded = true;
+      }
+      // Return X-Y coordinates
+      function findPos(obj) {
+        var curleft = 0, curtop = 0;
+        if (obj.offsetParent) {
+          do {
+            curleft += obj.offsetLeft;
+            curtop += obj.offsetTop;
+          } while (obj = obj.offsetParent);
+          return { x: curleft, y: curtop };
+        }
+        return undefined;
+      }
 
+      // Returns hex value
+      function rgbToHex(r, g, b) {
+        if (r > 255 || g > 255 || b > 255)
+          throw 'Invalid color component';
+        return ((r << 16) | (g << 8) | b).toString(16);
+      }
+
+      var uploaded = false;
+      var currentcanvas = 0;
+      var imageLoader = document.getElementById('imageLoader');
+      
+      // Listen for file uploads
+      imageLoader.addEventListener('change', handleImage, false);
+      var canvas = document.getElementById('imageCanvas');
+      var ctx = canvas.getContext('2d');
+      
+      $('button').click(function(){
+        uploaded = true;
+        var img = new Image();
+        img.onload = function(){
+            canvas.width = img.width;
+            canvas.height = img.height;
+            ctx.drawImage(img,0,0);
+        }
+        console.log($('#imageLink').val());
+        img.crossOrigin = "Anonymous";
+        img.src = $('#imageLink').val();
+      });
+      
+      $('.palette').click(function(){
+        currentcanvas = $(this).attr('id');
+        $('.selected').attr('class', 'palette');
+        $(this).attr('class', 'selected');
+      });
+      
+      $('#imageCanvas').mousemove(function(e) {
+        if (uploaded == true) {
+          var pos = findPos(this);
+          var x = e.pageX - pos.x;
+          var y = e.pageY - pos.y;
+          var coord = 'x=' + x + ', y=' + y;
+          var c = this.getContext('2d');
+          var p = c.getImageData(x, y, 1, 1).data; 
+          var hex = '#' + ('000000' + rgbToHex(p[0], p[1], p[2])).slice(-6);
+          $('#hover').text(hex);
+        };
+      });
+      $('#imageCanvas').click(function(e) {
+        if (uploaded == true) {
+          var pos = findPos(this);
+          var x = e.pageX - pos.x;
+          var y = e.pageY - pos.y;
+          var coord = 'x=' + x + ', y=' + y;
+          var c = this.getContext('2d');
+          var p = c.getImageData(x, y, 1, 1).data; 
+          var hex = '#' + ('000000' + rgbToHex(p[0], p[1], p[2])).slice(-6);
+          var canvastarget = '#' + String(currentcanvas);
+          $(canvastarget).css('background', hex);
+        }
+      });
+      
+    });
 block content
-  h1= title
   p Palette Maker
+  div#1.palette
+  div#2.palette
+  div#3.palette
+  div#4.palette
+  div#5.palette
+  br
+  input#imageLink(type='text', name='imageLink')
+  button(type='button') Upload
+  input#imageLoader(type='file', name='imageLoader')
+  p#hover
+  canvas#imageCanvas
